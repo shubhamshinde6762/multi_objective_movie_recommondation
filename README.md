@@ -61,6 +61,110 @@ A cutting-edge recommendation system combining classical machine learning with q
    - Parameterized quantum circuits
    - Quantum state amplitudes
 
+## 🛠️ Pipeline Architecture
+
+### System Pipeline Overview
+```
+                 ┌─────────────────┐
+                 │   Raw Data      │
+                 │  (MovieLens)    │
+                 └────────┬────────┘
+                          ▼
+             ┌────────────────────────┐
+             │   Data Preprocessing   │
+             │  (src/data/processor)  │
+             └────────────┬───────────┘
+                          ▼
+┌───────────────────────────────────────────┐
+│          Feature Engineering              │
+│  Classical Features    Quantum Features   │
+│  (src/data/processor)  (src/quantum/*)    │
+└────────────────────┬──────────────────────┘
+                     ▼
+       ┌───────────────────────────┐
+       │      Model Training       │
+       │                           │
+┌──────┴──────┐            ┌───────┴────────┐
+│  Classical  │            │    Quantum     │
+│ Neural Net  │            │    Model       │
+│(src/models/ │            │(src/models/    │
+│neural_network)           │quantum_model)  │
+└──────┬──────┘            └───────┬────────┘
+       │                           │
+       │       ┌───────────┐       │
+       └───────► Ensemble  ◄───────┘
+               │   Model   │
+               └─────┬─────┘
+                     ▼
+        ┌────────────────────────┐
+        │  Multi-Objective       │
+        │  Optimization          │
+        │  (Accuracy, Diversity, │
+        │   Fairness, Novelty)   │
+        └────────────┬───────────┘
+                     ▼
+        ┌────────────────────────┐
+        │    Evaluation &        │
+        │    Analysis            │
+        │  (src/evaluation/      │
+        │   evaluator)           │
+        └────────────┬───────────┘
+                     ▼
+        ┌────────────────────────┐
+        │    Visualization       │
+        │  (src/visualization/   │
+        │   visualizer)          │
+        └────────────────────────┘
+```
+
+### Pipeline Components
+
+1. **Data Preprocessing** (`src/data/processor.py`)
+   - Loads raw MovieLens data
+   - Cleans and transforms data
+   - Performs initial feature extraction
+   - Outputs processed data to `results/processed_data/`
+
+2. **Feature Engineering**
+   - **Classical Features** (`src/data/processor.py`)
+     - Creates user-movie interaction matrix
+     - Generates temporal features
+     - Builds user and movie embeddings
+   - **Quantum Features** (`src/quantum/`)
+     - `quantum_embeddings.py`: Creates quantum state representations
+     - `quantum_interface.py`: Bridges classical and quantum data
+     - `quantum_ml.py`: Implements quantum machine learning algorithms
+
+3. **Model Training**
+   - **Neural Network** (`src/models/neural_network.py`)
+     - Implements collaborative filtering neural network
+     - Handles training, validation, and hyperparameter tuning
+   - **Quantum Model** (`src/models/quantum_model.py`)
+     - Implements quantum circuits for recommendation
+     - Integrates with classical components
+     - Manages quantum state preparation and measurement
+
+4. **Multi-Objective Optimization**
+   - Balances recommendation objectives:
+     - Accuracy (prediction error metrics)
+     - Diversity (genre/director variety)
+     - Fairness (demographic parity)
+     - Novelty (unexplored content)
+   - Uses Pareto optimization techniques
+
+5. **Evaluation & Analysis** (`src/evaluation/evaluator.py`, `src/analysis/analyzer.py`)
+   - Computes performance metrics
+   - Analyzes prediction patterns
+   - Evaluates fairness and diversity scores
+   - Performs topological data analysis
+   - Outputs results to `results/evaluation/` and specialized subdirectories
+
+6. **Visualization** (`src/visualization/visualizer.py`)
+   - Generates performance visualizations
+   - Creates fairness assessment plots
+   - Produces topological analysis visualizations
+   - Outputs visualizations to `results/visualizations/` and related directories
+
 ## 🤖 Model Architecture
 
 ### 1. Neural Network Model
@@ -168,6 +272,76 @@ A cutting-edge recommendation system combining classical machine learning with q
 - Fairness Score: 0.92
 - Novelty Score: 0.75
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.9+
+- Anaconda/Miniconda
+- Qiskit (for quantum components)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/username/movie-recommender.git
+cd movie-recommender
+
+# Create environment using conda
+conda env create -f environment.yml
+
+# Activate environment
+conda activate movie_recommender
+
+# Or install dependencies via pip
+pip install -r requirements.txt
+```
+
+### Usage
+```bash
+# Run the full pipeline
+python main.py --step all
+
+# Run specific pipeline steps
+python main.py --step preprocess  # Data preprocessing only
+python main.py --step train       # Model training only
+python main.py --step evaluate    # Evaluation only
+python main.py --step visualize   # Visualization only
+
+# Run with specific configuration
+python main.py --config custom_config.py
+```
+
+### Example Jupyter Notebook
+The repository includes a comprehensive Jupyter notebook (`kaggle_notebook.ipynb`) that demonstrates the full pipeline with explanations and visualizations.
+
+## 📁 Project Structure
+```
+movie_recommender/
+├── config.py                # Configuration settings
+├── data/                    # Data directory
+│   ├── raw/                 # Raw MovieLens data
+│   └── processed/           # Processed datasets
+├── environment.yml          # Conda environment file
+├── main.py                  # Main execution script
+├── models/                  # Saved model files
+│   └── checkpoints/         # Training checkpoints
+├── README.md                # Project documentation
+├── requirements.txt         # Python dependencies
+├── results/                 # Output directory
+│   ├── evaluation/          # Evaluation metrics
+│   ├── fairness/            # Fairness analyses
+│   ├── outliers/            # Outlier detection results
+│   ├── processed_data/      # Intermediate data files
+│   ├── topology/            # Topological analyses
+│   └── visualizations/      # Generated plots
+└── src/                     # Source code
+    ├── analysis/            # Analysis modules
+    ├── data/                # Data processing modules
+    ├── evaluation/          # Evaluation modules
+    ├── models/              # Model implementations
+    ├── quantum/             # Quantum computing modules
+    └── visualization/       # Visualization modules
+```
+
 ## 📚 References
 
 1. **Quantum Computing**:
@@ -190,22 +364,5 @@ A cutting-edge recommendation system combining classical machine learning with q
    - Bias Mitigation
    - Ethical AI
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Anaconda/Miniconda
-- Qiskit (for quantum components)
-
-### Installation
-```bash
-pip install -r requirements.txt
-```
-
-### Usage
-```bash
-python main.py --step train
-```
-
 ## 📝 License
-MIT License - See LICENSE file for details 
+MIT License - See LICENSE file for details
