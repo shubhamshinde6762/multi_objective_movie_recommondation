@@ -1,97 +1,198 @@
-import logging
-from pathlib import Path
 import torch
 import torch.optim as optim
 from tqdm import tqdm
 import pandas as pd
+from pathlib import Path
+import logging
+import numpy as np
 
 from config import (
     PROJECT_ROOT, DATA_DIR, MODELS_DIR, RESULTS_DIR,
-    QUANTUM_SETTINGS, RANDOM_SEED
+    MODEL_SETTINGS, RANDOM_SEED, ENVIRONMENT_SETTINGS
 )
 from src.data.processor import DataProcessor
-from src.models.quantum_model import QuantumModel
+from src.models.neural_network import NeuralNetwork
+from src.visualization.visualizer import Visualizer
+from src.evaluation.evaluator import Evaluator
 from src.analysis.analyzer import (
     TopologicalAnalyzer,
     OutlierDetector,
     FairnessAnalyzer
 )
 
-# Configure minimal logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s',
-    handlers=[logging.StreamHandler()]
-)
-
-logger = logging.getLogger(__name__)
+# Configure logging to only show errors
+logging.basicConfig(level=logging.ERROR)
 
 def main():
     try:
+        # Set CPU-specific settings
+        torch.set_num_threads(ENVIRONMENT_SETTINGS["torch_num_threads"])
+        torch.set_num_interop_threads(ENVIRONMENT_SETTINGS["torch_num_interop_threads"])
+        torch.set_float32_matmul_precision('medium')
+        
         # Set random seeds
         torch.manual_seed(RANDOM_SEED)
+        np.random.seed(RANDOM_SEED)
         
         # Initialize components
         data_processor = DataProcessor()
-        topological_analyzer = TopologicalAnalyzer()
-        outlier_detector = OutlierDetector()
-        fairness_analyzer = FairnessAnalyzer()
+        visualizer = Visualizer(RESULTS_DIR / "visualizations")
         
-        # Pipeline steps
-        logger.info("1. Loading and preprocessing data...")
+        print("Starting data processing...")
         data_processor.load_data()
         data_processor.preprocess_data()
         ratings, users, movies, graph, edge_index, edge_attr, fft_values = data_processor.get_processed_data()
-        data_processor.save_processed_data(RESULTS_DIR / "processed_data")
         
-        logger.info("2. Performing topological analysis...")
-        persistence, landscape = topological_analyzer.analyze_genres(movies)
-        topological_analyzer.save_analysis(RESULTS_DIR / "topology")
-        
-        logger.info("3. Detecting outliers...")
-        outlier_scores = outlier_detector.detect_outliers(ratings, users)
-        outlier_detector.save_outliers(RESULTS_DIR / "outliers")
-        
-        logger.info("4. Analyzing fairness...")
-        fairness_scores = fairness_analyzer.analyze_fairness(ratings, users)
-        fairness_analyzer.save_fairness(RESULTS_DIR / "fairness")
-        
-        logger.info("5. Training quantum model...")
-        X = torch.tensor(ratings[['rating', 'time_decay']].values, dtype=torch.float32)
+        # Use only essential features
+        X = torch.tensor(ratings[['rating']].values, dtype=torch.float32)
         y = torch.tensor(ratings['rating'].values, dtype=torch.float32).view(-1, 1)
         
-        model = QuantumModel(
+        # Split data into train and validation
+        n_samples = len(X)
+        indices = np.random.permutation(n_samples)
+        train_size = int(0.8 * n_samples)
+        train_indices = indices[:train_size]
+        val_indices = indices[train_size:]
+        
+        X_train, y_train = X[train_indices], y[train_indices]
+        X_val, y_val = X[val_indices], y[val_indices]
+        
+        print("Starting model training...")
+        # Create a more powerful model
+        model = NeuralNetwork(
             input_size=X.shape[1],
-            hidden_size=QUANTUM_SETTINGS["hidden_size"],
-            num_qubits=QUANTUM_SETTINGS["n_qubits"]
+            hidden_size=MODEL_SETTINGS["hidden_dim"],
+            output_size=1
         )
-        optimizer = optim.Adam(model.parameters(), lr=QUANTUM_SETTINGS["learning_rate"])
         
-        # Training loop
-        n_epochs = QUANTUM_SETTINGS["n_epochs"]
-        batch_size = QUANTUM_SETTINGS["batch_size"]
-        n_batches = len(X) // batch_size
+        optimizer = optim.Adam(
+            model.parameters(),
+            lr=MODEL_SETTINGS["learning_rate"],
+            weight_decay=MODEL_SETTINGS["weight_decay"]
+        )
         
-        for epoch in range(n_epochs):
-            epoch_loss = 0.0
+        # Training parameters
+        n_epochs = MODEL_SETTINGS["num_epochs"]
+        batch_size = MODEL_SETTINGS["batch_size"]
+        patience = MODEL_SETTINGS["early_stopping_patience"]
+        best_val_loss = float('inf')
+        patience_counter = 0
+        
+        # Lists to store training history
+        train_losses = []
+        val_losses = []
+        learning_rates = []
+        
+        # Training loop with early stopping and learning rate monitoring
+        for epoch in tqdm(range(n_epochs), desc="Training"):
+            # Training
+            model.train()
+            train_loss = 0.0
+            n_batches = len(X_train) // batch_size
+            
             for batch_idx in range(n_batches):
                 start_idx = batch_idx * batch_size
                 end_idx = start_idx + batch_size
                 
-                X_batch = X[start_idx:end_idx]
-                y_batch = y[start_idx:end_idx]
+                X_batch = X_train[start_idx:end_idx]
+                y_batch = y_train[start_idx:end_idx]
                 
-                loss = model.train_step(X_batch, y_batch, optimizer)
-                epoch_loss += loss
+                optimizer.zero_grad()
+                outputs = model(X_batch)
+                loss = torch.nn.functional.mse_loss(outputs, y_batch)
+                loss.backward()
+                optimizer.step()
+                
+                train_loss += loss.item()
             
-            avg_loss = epoch_loss / n_batches
-            logger.info(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
+            # Validation
+            model.eval()
+            with torch.no_grad():
+                val_outputs = model(X_val)
+                val_loss = torch.nn.functional.mse_loss(val_outputs, y_val).item()
+            
+            avg_train_loss = train_loss / n_batches
+            train_losses.append(avg_train_loss)
+            val_losses.append(val_loss)
+            learning_rates.append(optimizer.param_groups[0]['lr'])
+            
+            # Early stopping check with improved monitoring
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                patience_counter = 0
+                # Save best model
+                model.save(MODELS_DIR / "model.pt")
+                print(f"\nNew best model saved at epoch {epoch + 1} with val_loss: {val_loss:.6f}")
+            else:
+                patience_counter += 1
+                if patience_counter >= patience:
+                    print(f"\nEarly stopping at epoch {epoch + 1}")
+                    break
+            
+            # Print detailed progress every epoch
+            print(f"Epoch {epoch + 1}/{n_epochs}")
+            print(f"Train Loss: {avg_train_loss:.6f}")
+            print(f"Val Loss: {val_loss:.6f}")
+            print(f"Learning Rate: {optimizer.param_groups[0]['lr']:.6f}")
+            print(f"Patience Counter: {patience_counter}/{patience}")
+            print("-" * 50)
         
-        model.save(MODELS_DIR / "quantum_model.pt")
-        logger.info("Pipeline completed")
+        print("Training completed")
+        
+        # Generate comprehensive visualizations
+        print("\nGenerating visualizations...")
+        
+        # 1. Training history
+        visualizer.plot_training_history(train_losses, val_losses, learning_rates)
+        
+        # 2. Prediction analysis
+        with torch.no_grad():
+            y_pred = model(X_val).numpy()
+            errors = y_pred - y_val.numpy()
+        visualizer.plot_prediction_analysis(y_val.numpy(), y_pred, errors)
+        
+        # 3. Feature importance (simple version for this model)
+        feature_names = ['rating']
+        importance_scores = [1.0]  # Since we only have one feature
+        visualizer.plot_feature_importance(feature_names, importance_scores)
+        
+        # 4. Distribution analysis
+        visualizer.plot_distribution_analysis(y_val.numpy(), y_pred)
+        
+        # 5. Correlation analysis
+        visualizer.plot_correlation_analysis(X_val.numpy(), y_val.numpy())
+        
+        # Evaluate model
+        print("\nEvaluating model...")
+        evaluator = Evaluator(model, RESULTS_DIR / "evaluation")
+        eval_results = evaluator.evaluate(X_val, y_val)
+        evaluator.print_metrics(eval_results['metrics'])
+        
+        # 6. Performance metrics visualization
+        visualizer.plot_performance_metrics(eval_results)
+        
+        print("\nPipeline completed successfully")
+        print("\nResults saved in:")
+        print(f"- Model: {MODELS_DIR}/model.pt")
+        print(f"- Evaluation metrics: {RESULTS_DIR}/evaluation/metrics.json")
+        print(f"- Detailed results: {RESULTS_DIR}/evaluation/detailed_results.csv")
+        print(f"- Visualizations: {RESULTS_DIR}/visualizations/")
+        print("\nVisualization files:")
+        print("1. Training History:")
+        print("   - 01_training_history.png")
+        print("2. Prediction Analysis:")
+        print("   - 02_prediction_analysis.png")
+        print("3. Feature Analysis:")
+        print("   - 03_feature_importance.png")
+        print("4. Distribution Analysis:")
+        print("   - 04_distribution_analysis.png")
+        print("5. Correlation Analysis:")
+        print("   - 05_correlation_analysis.png")
+        print("6. Performance Metrics:")
+        print("   - 06_performance_metrics.png")
         
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        print(f"Pipeline failed with error: {str(e)}")
         raise
 
 if __name__ == "__main__":

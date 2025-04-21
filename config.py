@@ -8,19 +8,102 @@ including data paths, model parameters, and analysis settings.
 import os
 from pathlib import Path
 
-# Base directory for the project
-BASE_DIR = Path(__file__).parent
+# Project root directory
+PROJECT_ROOT = Path(__file__).parent.absolute()
 
-# Project paths
-PROJECT_ROOT = BASE_DIR
+# Data directories
 DATA_DIR = PROJECT_ROOT / "data"
-SRC_DIR = PROJECT_ROOT / "src"
 MODELS_DIR = PROJECT_ROOT / "models"
 RESULTS_DIR = PROJECT_ROOT / "results"
 
 # Create directories if they don't exist
-for directory in [DATA_DIR, SRC_DIR, MODELS_DIR, RESULTS_DIR]:
+for directory in [DATA_DIR, MODELS_DIR, RESULTS_DIR]:
     directory.mkdir(exist_ok=True)
+
+# Random seed for reproducibility
+RANDOM_SEED = 42
+
+# Model settings optimized for better performance
+MODEL_SETTINGS = {
+    "batch_size": 128,  # Increased batch size for better GPU utilization
+    "learning_rate": 0.001,  # Increased learning rate for faster convergence
+    "weight_decay": 1e-4,  # Increased regularization
+    "num_epochs": 50,  # More epochs for better convergence
+    "early_stopping_patience": 5,  # Increased patience
+    "validation_split": 0.2,
+    "num_workers": 4,  # More workers for data loading
+    "embedding_dim": 64,  # Larger embedding size
+    "hidden_dim": 128,  # Larger hidden layer size
+    "dropout": 0.3,  # Increased dropout for better regularization
+}
+
+# Feature processing settings
+FEATURE_SETTINGS = {
+    "min_ratings_per_user": 5,
+    "min_ratings_per_movie": 5,
+    "time_decay_factor": 0.95,
+    "genre_threshold": 0.1,
+    "max_features": 500,  # Reduced for CPU memory constraints
+    "chunk_size": 5000,  # Process data in smaller chunks
+}
+
+# Multi-objective optimization settings
+OPTIMIZATION_SETTINGS = {
+    "accuracy_weight": 0.4,
+    "diversity_weight": 0.3,
+    "fairness_weight": 0.2,
+    "novelty_weight": 0.1,
+    "population_size": 20,  # Reduced for CPU
+    "num_generations": 10,  # Reduced for CPU
+    "batch_size": 32,  # Reduced for CPU
+}
+
+# Analysis settings
+ANALYSIS_SETTINGS = {
+    "top_k": 10,
+    "min_support": 0.01,
+    "confidence_threshold": 0.5,
+    "max_clusters": 3,  # Reduced for CPU
+}
+
+# Memory management settings
+MEMORY_SETTINGS = {
+    "max_memory_usage": 0.7,  # 70% of available RAM
+    "chunk_size": 5000,  # Process data in smaller chunks
+    "cache_size": 500,  # Reduced cache size
+}
+
+# Environment settings optimized for performance
+ENVIRONMENT_SETTINGS = {
+    "device": "cpu",
+    "num_threads": 8,  # Increased thread count
+    "use_mkl": True,
+    "use_openmp": True,
+    "torch_num_threads": 8,
+    "torch_num_interop_threads": 8,
+}
+
+# Dataset settings
+DATASET_SETTINGS = {
+    "name": "ml-100k",
+    "min_rating": 1,
+    "max_rating": 5,
+    "rating_scale": 5,
+    "timestamp_format": "%Y-%m-%d %H:%M:%S",
+}
+
+# Path settings
+PATH_SETTINGS = {
+    "raw_data": DATA_DIR / "raw",
+    "processed_data": DATA_DIR / "processed",
+    "model_checkpoints": MODELS_DIR / "checkpoints",
+    "results": RESULTS_DIR,
+    "visualizations": RESULTS_DIR / "visualizations",
+}
+
+# Create all necessary subdirectories
+for path in PATH_SETTINGS.values():
+    path.mkdir(parents=True, exist_ok=True)
 
 # Data paths
 DATA_PATHS = {
@@ -135,11 +218,4 @@ VISUALIZATION = {
     "palette": "viridis",
     # Style for plots
     "style": "seaborn"
-}
-
-# Random seed for reproducibility
-RANDOM_SEED = 42
-
-# Logging settings
-LOG_LEVEL = "INFO"
-LOG_FILE = PROJECT_ROOT / "recommender.log" 
+} 
