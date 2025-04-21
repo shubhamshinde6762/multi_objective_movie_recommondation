@@ -15,22 +15,39 @@ A cutting-edge recommendation system combining classical machine learning with q
 ## 📊 Data Card
 
 ### Dataset Overview
-- Source: MovieLens 1M Dataset
-- Size: ~1 million ratings
-- Features:
-  - User ID
-  - Movie ID
-  - Rating (1-5)
-  - Timestamp
-  - Movie genres
-  - User demographics
+- **Source**: MovieLens 100K Dataset (GroupLens Research Project, University of Minnesota)
+- **Collection Period**: September 19th, 1997 - April 22nd, 1998
+- **Size**: 100,000 ratings from 943 users on 1,682 movies
+- **Data Quality**: Cleaned dataset with users having at least 20 ratings and complete demographic information
+
+### Data Files Structure
+1. **u.data**
+   - Full dataset with 100,000 ratings
+   - Tab-separated format: user_id | item_id | rating | timestamp
+   - Timestamps in Unix seconds since 1/1/1970 UTC
+   - Randomly ordered data
+
+2. **u.item**
+   - Movie information
+   - Tab-separated format: movie_id | title | release_date | video_release_date | IMDb_URL | genres
+   - 19 binary genre fields (Action, Adventure, Animation, etc.)
+   - Movies can belong to multiple genres
+
+3. **u.user**
+   - User demographic information
+   - Tab-separated format: user_id | age | gender | occupation | zip_code
+   - Complete demographic profiles for all users
+
+4. **Cross-Validation Sets**
+   - u1.base/u1.test through u5.base/u5.test: 80%/20% splits for 5-fold cross-validation
+   - ua.base/ua.test and ub.base/ub.test: Training/test sets with exactly 10 ratings per user in test set
 
 ### Feature Engineering
 1. **Base Features**:
-   - User ratings
-   - Movie genres
-   - User demographics
-   - Timestamp
+   - User ratings (1-5 scale)
+   - Movie genres (19 binary features)
+   - User demographics (age, gender, occupation)
+   - Timestamp (converted to temporal features)
 
 2. **Derived Features**:
    - Time decay factor (α = 0.95)
