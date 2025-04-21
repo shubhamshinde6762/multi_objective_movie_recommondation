@@ -157,151 +157,106 @@ MIT License - See LICENSE file for details
 
 #### Quantum States and Superposition
 - A quantum state is represented as a vector in Hilbert space:
-  \[
-  |\psi\rangle = \alpha|0\rangle + \beta|1\rangle
-  \]
-  where \(|\alpha|^2 + |\beta|^2 = 1\)
+  $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$
+  where $|\alpha|^2 + |\beta|^2 = 1$
 
 - Quantum superposition allows parallel computation:
-  \[
-  |\psi\rangle = \frac{1}{\sqrt{2^n}}\sum_{x=0}^{2^n-1}|x\rangle
-  \]
+  $|\psi\rangle = \frac{1}{\sqrt{2^n}}\sum_{x=0}^{2^n-1}|x\rangle$
 
 #### Quantum Gates and Circuits
 - Basic quantum gates:
-  - Hadamard gate: \(H = \frac{1}{\sqrt{2}}\begin{pmatrix}1 & 1\\1 & -1\end{pmatrix}\)
-  - Pauli gates: \(X, Y, Z\)
-  - Rotation gates: \(R_x(\theta), R_y(\theta), R_z(\theta)\)
+  - Hadamard gate: 
+    $H = \frac{1}{\sqrt{2}}\begin{pmatrix}1 & 1\\1 & -1\end{pmatrix}$
+  - Pauli gates: $X, Y, Z$
+  - Rotation gates: $R_x(\theta), R_y(\theta), R_z(\theta)$
 
 - Quantum circuit depth and width:
-  \[
-  \text{Depth} = \max_{i} \text{number of gates in path } i
-  \]
-  \[
-  \text{Width} = \text{number of qubits}
-  \]
+  $\text{Depth} = \max_{i} \text{number of gates in path } i$
+  $\text{Width} = \text{number of qubits}$
 
 ### 2. Quantum Machine Learning
 
 #### Quantum Feature Maps
 - Feature encoding using quantum states:
-  \[
-  \phi(x) = U(x)|0\rangle^{\otimes n}
-  \]
-  where \(U(x)\) is a parameterized quantum circuit
+  $\phi(x) = U(x)|0\rangle^{\otimes n}$
+  where $U(x)$ is a parameterized quantum circuit
 
 - Quantum kernel function:
-  \[
-  k(x_i, x_j) = |\langle\phi(x_i)|\phi(x_j)\rangle|^2
-  \]
+  $k(x_i, x_j) = |\langle\phi(x_i)|\phi(x_j)\rangle|^2$
 
 #### Quantum Neural Networks
 - Quantum perceptron:
-  \[
-  |\psi_{out}\rangle = U(\theta)|\psi_{in}\rangle
-  \]
-  where \(U(\theta)\) is a parameterized unitary transformation
+  $|\psi_{out}\rangle = U(\theta)|\psi_{in}\rangle$
+  where $U(\theta)$ is a parameterized unitary transformation
 
 - Quantum gradient descent:
-  \[
-  \theta_{t+1} = \theta_t - \eta\nabla_\theta\mathcal{L}(\theta_t)
-  \]
+  $\theta_{t+1} = \theta_t - \eta\nabla_\theta\mathcal{L}(\theta_t)$
 
 ### 3. Topological Data Analysis
 
 #### Persistent Homology
 - Simplicial complex construction:
-  \[
-  K_\epsilon = \{ \sigma \subseteq X | \text{diam}(\sigma) \leq \epsilon \}
-  \]
+  $K_\epsilon = \{ \sigma \subseteq X | \text{diam}(\sigma) \leq \epsilon \}$
 
 - Persistence diagram:
-  \[
-  \text{PD}_k = \{ (b_i, d_i) \in \mathbb{R}^2 | b_i < d_i \}
-  \]
-  where \(b_i\) is birth time and \(d_i\) is death time
+  $\text{PD}_k = \{ (b_i, d_i) \in \mathbb{R}^2 | b_i < d_i \}$
+  where $b_i$ is birth time and $d_i$ is death time
 
 #### Betti Numbers
 - k-th Betti number:
-  \[
-  \beta_k = \text{rank}(H_k)
-  \]
-  where \(H_k\) is the k-th homology group
+  $\beta_k = \text{rank}(H_k)$
+  where $H_k$ is the k-th homology group
 
 ### 4. Recommendation System Theory
 
 #### Matrix Factorization
 - Rating matrix decomposition:
-  \[
-  R \approx UV^T
-  \]
-  where \(U \in \mathbb{R}^{m \times k}\), \(V \in \mathbb{R}^{n \times k}\)
+  $R \approx UV^T$
+  where $U \in \mathbb{R}^{m \times k}$, $V \in \mathbb{R}^{n \times k}$
 
 - Loss function:
-  \[
-  \mathcal{L} = \sum_{(i,j)\in\Omega}(r_{ij} - u_i^Tv_j)^2 + \lambda(\|U\|_F^2 + \|V\|_F^2)
-  \]
+  $\mathcal{L} = \sum_{(i,j)\in\Omega}(r_{ij} - u_i^Tv_j)^2 + \lambda(\|U\|_F^2 + \|V\|_F^2)$
 
 #### Quantum-enhanced Factorization
 - Quantum state preparation:
-  \[
-  |\psi\rangle = \frac{1}{\sqrt{Z}}\sum_{i,j}\sqrt{r_{ij}}|i\rangle|j\rangle
-  \]
-  where \(Z\) is the normalization factor
+  $|\psi\rangle = \frac{1}{\sqrt{Z}}\sum_{i,j}\sqrt{r_{ij}}|i\rangle|j\rangle$
+  where $Z$ is the normalization factor
 
 - Quantum measurement:
-  \[
-  \langle\psi|M|\psi\rangle = \text{Tr}(\rho M)
-  \]
-  where \(\rho\) is the density matrix
+  $\langle\psi|M|\psi\rangle = \text{Tr}(\rho M)$
+  where $\rho$ is the density matrix
 
 ### 5. Fairness Metrics
 
 #### Demographic Parity
 - Definition:
-  \[
-  \text{DP} = \left|P(\hat{y}=1|A=a) - P(\hat{y}=1|A=b)\right|
-  \]
-  where \(A\) is the protected attribute
+  $\text{DP} = \left|P(\hat{y}=1|A=a) - P(\hat{y}=1|A=b)\right|$
+  where $A$ is the protected attribute
 
 #### Equal Opportunity
 - Definition:
-  \[
-  \text{EO} = \left|P(\hat{y}=1|A=a,Y=1) - P(\hat{y}=1|A=b,Y=1)\right|
-  \]
+  $\text{EO} = \left|P(\hat{y}=1|A=a,Y=1) - P(\hat{y}=1|A=b,Y=1)\right|$
 
 ## 📊 Performance Analysis
 
 ### 1. Quantum Advantage
 - Speedup analysis:
-  \[
-  \text{Speedup} = \frac{T_{\text{classical}}}{T_{\text{quantum}}}
-  \]
+  $\text{Speedup} = \frac{T_{\text{classical}}}{T_{\text{quantum}}}$
 
 - Error analysis:
-  \[
-  \epsilon = \|\hat{y} - y\|_2
-  \]
+  $\epsilon = \|\hat{y} - y\|_2$
 
 ### 2. Topological Analysis
 - Persistence landscape:
-  \[
-  \lambda_k(t) = \sup\{m \geq 0 | (t-m, t+m) \in \text{PD}_k\}
-  \]
+  $\lambda_k(t) = \sup\{m \geq 0 | (t-m, t+m) \in \text{PD}_k\}$
 
 - Stability analysis:
-  \[
-  \text{Stability} = \frac{1}{n}\sum_{i=1}^n \frac{d_i - b_i}{\max(d_i, b_i)}
-  \]
+  $\text{Stability} = \frac{1}{n}\sum_{i=1}^n \frac{d_i - b_i}{\max(d_i, b_i)}$
 
 ### 3. Model Comparison
 - Performance metrics:
-  \[
-  \text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^n(y_i - \hat{y}_i)^2}
-  \]
-  \[
-  \text{MAE} = \frac{1}{n}\sum_{i=1}^n|y_i - \hat{y}_i|
-  \]
+  $\text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^n(y_i - \hat{y}_i)^2}$
+  $\text{MAE} = \frac{1}{n}\sum_{i=1}^n|y_i - \hat{y}_i|$
 
 ## 📚 References
 
